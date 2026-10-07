@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speech Emotion Recognition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Noto+Sans+Kannada:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0d17;--card:#141828;--line:#242a44;--tx:#eef0ff;--mut:#8b92b8;--a1:#7c5cff;--a2:#00d4ff;--ok:#2ee6a6;--bad:#ff5d7a}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Space Grotesk','Noto Sans Kannada',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;
+ background-image:radial-gradient(900px 500px at 10% -10%,#7c5cff33,transparent),radial-gradient(800px 500px at 100% 0,#00d4ff22,transparent)}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
+nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px}
+.logo{font-weight:700;font-size:20px;display:flex;gap:10px;align-items:center}
+.logo i{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--a1),var(--a2));display:grid;place-items:center;font-style:normal}
+.pill{font-size:12px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);color:var(--mut);display:flex;gap:7px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}.dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}.dot.off{background:var(--bad)}
+h1{font-size:clamp(32px,6vw,58px);line-height:1.05;letter-spacing:-1.5px;max-width:760px}
+h1 span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mut);margin:16px 0 30px;max-width:620px;line-height:1.55}
+.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px}
+.card h3{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:14px;font-weight:500}
+.lang{display:grid;grid-template-columns:1fr 1fr;background:#0d1020;border-radius:14px;padding:4px;margin-bottom:18px}
+.lang button{background:none;border:0;color:var(--mut);padding:11px;border-radius:11px;font:inherit;font-weight:500;cursor:pointer;transition:.2s}
+.lang button.act{background:linear-gradient(135deg,var(--a1),#5b8cff);color:#fff}
+.drop{border:2px dashed var(--line);border-radius:16px;padding:30px 16px;text-align:center;cursor:pointer;transition:.2s;color:var(--mut)}
+.drop:hover,.drop.over{border-color:var(--a2);background:#00d4ff0d;color:var(--tx)}
+.drop b{display:block;color:var(--tx);font-size:16px;margin-bottom:4px}
+.or{text-align:center;color:var(--mut);font-size:12px;margin:12px 0}
+.btn{width:100%;border:0;border-radius:14px;padding:14px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;transition:.2s;color:#fff}
+.btn.rec{background:#1c2140;border:1px solid var(--line)}.btn.rec.live{background:var(--bad);animation:pulse 1.2s infinite}
+.btn.go{background:linear-gradient(135deg,var(--a1),var(--a2));margin-top:16px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+@keyframes pulse{50%{box-shadow:0 0 0 8px #ff5d7a33}}
+canvas{width:100%;height:110px;display:block;background:#0d1020;border-radius:14px;margin-top:16px}
+audio{width:100%;margin-top:12px;height:38px}
+.fname{font-size:13px;color:var(--mut);margin-top:12px}
+.hide{display:none!important}
+.res{text-align:center;padding:10px 0 4px}
+.emo{font-size:72px;line-height:1}
+.name{font-size:34px;font-weight:700;margin:8px 0 2px}
+.conf{color:var(--mut);font-size:14px}
+.bars{margin-top:22px;display:grid;gap:12px}
+.row{display:grid;grid-template-columns:78px 1fr 52px;gap:10px;align-items:center;font-size:14px}
+.track{height:10px;background:#0d1020;border-radius:9px;overflow:hidden}
+.fill{height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,var(--a1),var(--a2));transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.row.top .fill{background:linear-gradient(90deg,var(--ok),var(--a2))}.row.top{font-weight:700}
+.row span:last-child{text-align:right;color:var(--mut)}
+.meta{display:flex;gap:10px;margin-top:20px}
+.meta div{flex:1;background:#0d1020;border-radius:12px;padding:10px;text-align:center;font-size:12px;color:var(--mut)}
+.meta b{display:block;color:var(--tx);font-size:16px;margin-top:2px}
+.info dl{display:grid;gap:12px}.info dt{font-size:12px;color:var(--mut)}.info dd{font-weight:500;margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chips span{font-size:12px;padding:4px 10px;border-radius:99px;background:#7c5cff22;color:#b9a8ff}
+.err{background:#ff5d7a1a;border:1px solid #ff5d7a55;color:#ffb3c0;padding:12px;border-radius:12px;font-size:13px;margin-top:14px}
+.spin{width:44px;height:44px;border:4px solid var(--line);border-top-color:var(--a2);border-radius:50%;animation:s 0.8s linear infinite;margin:30px auto}
+@keyframes s{to{transform:rotate(360deg)}}
+.empty{color:var(--mut);text-align:center;padding:40px 10px;line-height:1.6}
+footer{margin-top:36px;text-align:center;color:var(--mut);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <nav>
+  <div class="logo"><i>🎙️</i> Speech Emotion Recognition</div>
+  <div class="pill"><span class="dot" id="dot"></span><span id="status">checking server…</span></div>
+ </nav>
+
+ <h1>Hear the <span>emotion</span> behind every voice.</h1>
+ <p class="sub">Deep learning–based bilingual speech emotion recognition for <b>ಕನ್ನಡ</b> and <b>English</b>, with an optimized model for each language. Upload or record speech and see what the model hears.</p>
+
+ <div class="grid">
+  <section class="card">
+   <h3>1 · Choose language &amp; audio</h3>
+   <div class="lang">
+    <button class="act" data-l="Kannada">ಕನ್ನಡ · Kannada</button>
+    <button data-l="English">English</button>
+   </div>
+   <div class="drop" id="drop">
+    <b>Drop an audio file here</b>or click to browse · wav, mp3, m4a, aac, flac, ogg
+    <input type="file" id="file" accept="audio/*,.mp4" hidden>
+   </div>
+   <div class="or">— or —</div>
+   <button class="btn rec" id="rec">🎤 Record from microphone</button>
+   <div id="preview" class="hide">
+    <div class="fname" id="fname"></div>
+    <canvas id="wave" width="1000" height="220"></canvas>
+    <audio id="player" controls></audio>
+   </div>
+   <button class="btn go" id="go" disabled>🔍 Analyze Emotion</button>
+   <div id="err" class="err hide"></div>
+  </section>
+
+  <aside style="display:grid;gap:18px;align-content:start">
+   <section class="card" id="result">
+    <h3>2 · Prediction</h3>
+    <div class="empty" id="empty">Your result will appear here.<br>Pick a language, add audio, then hit Analyze.</div>
+    <div class="spin hide" id="spin"></div>
+    <div id="out" class="hide">
+     <div class="res"><div class="emo" id="emo"></div><div class="name" id="ename"></div><div class="conf" id="conf"></div></div>
+     <div class="bars" id="bars"></div>
+     <div class="meta"><div>Prediction time<b id="lat"></b></div><div>Language<b id="lg"></b></div></div>
+    </div>
+   </section>
+   <section class="card info">
+    <h3>Model information</h3>
+    <dl id="info"></dl>
+   </section>
+  </aside>
+ </div>
+ <footer>Deep Learning-Based Bilingual Speech Emotion Recognition with Model Optimization</footer>
+</div>
+
+<script>
+const API = location.protocol === 'file:' ? 'http://localhost:8000' : '';
+const EMOJI = {angry:'😠',fear:'😨',happy:'😄',normal:'😐',neutral:'😐',sad:'😢'};
+const KN = {angry:'ಕೋಪ',fear:'ಭಯ',happy:'ಸಂತೋಷ',normal:'ಸಾಮಾನ್ಯ',neutral:'ತಟಸ್ಥ',sad:'ದುಃಖ'};
+const INFO = {
+ Kannada:{Accuracy:'58.82% (test)',Architecture:'CNN + BiLSTM + Attention',Features:['MFCC','Mel','Chroma','ZCR'],'Sample rate':'22,050 Hz',Emotions:['Angry','Fear','Happy','Normal','Sad']},
+ English:{Architecture:'wav2vec2 + Logistic Regression',Features:['wav2vec2 layers 3–9','mean + std pooling'],'Sample rate':'16,000 Hz',Emotions:['Angry','Happy','Neutral','Sad']}
+};
+let lang='Kannada', blob=null, name='', recorder=null;
+const $=id=>document.getElementById(id);
+
+function renderInfo(){
+ $('info').innerHTML = Object.entries(INFO[lang]).map(([k,v])=>
+  `<div><dt>${k}</dt><dd>${Array.isArray(v)?'<div class="chips">'+v.map(x=>`<span>${x}</span>`).join('')+'</div>':v}</dd></div>`).join('');
+}
+document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('.lang button').forEach(x=>x.classList.remove('act'));
+ b.classList.add('act'); lang=b.dataset.l; renderInfo(); reset();
+});
+function reset(){$('out').classList.add('hide');$('empty').classList.remove('hide');$('err').classList.add('hide')}
+
+// health
+fetch(API+'/health').then(r=>r.ok?r.json():Promise.reject()).then(()=>{$('dot').className='dot on';$('status').textContent='API connected'})
+ .catch(()=>{$('dot').className='dot off';$('status').textContent='API offline — run uvicorn server:app'});
+
+// file select / drop
+$('drop').onclick=()=>$('file').click();
+$('file').onchange=e=>e.target.files[0]&&setAudio(e.target.files[0],e.target.files[0].name);
+['dragover','dragenter'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('over')}));
+['dragleave','drop'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.remove('over')}));
+$('drop').addEventListener('drop',e=>{const f=e.dataTransfer.files[0];f&&setAudio(f,f.name)});
+
+async function setAudio(b,n){
+ blob=b;name=n;reset();
+ $('preview').classList.remove('hide');$('fname').textContent='📁 '+n;
+ $('player').src=URL.createObjectURL(b);$('go').disabled=false;
+ try{
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const buf=await ctx.decodeAudioData(await b.arrayBuffer());drawWave(buf.getChannelData(0));ctx.close();
+ }catch{const c=$('wave'),g=c.getContext('2d');g.clearRect(0,0,c.width,c.height)}
+}
+function drawWave(d){
+ const c=$('wave'),g=c.getContext('2d'),W=c.width,H=c.height,step=Math.floor(d.length/W)||1;
+ g.clearRect(0,0,W,H);const gr=g.createLinearGradient(0,0,W,0);gr.addColorStop(0,'#7c5cff');gr.addColorStop(1,'#00d4ff');g.fillStyle=gr;
+ for(let x=0;x<W;x+=3){let mx=0;for(let j=0;j<step*3;j++){const v=Math.abs(d[x*step+j]||0);if(v>mx)mx=v}
+  const h=Math.max(2,mx*H*.95);g.fillRect(x,(H-h)/2,2,h)}
+}
+
+// mic
+$('rec').onclick=async()=>{
+ if(recorder){recorder.stop();return}
+ try{
+  const s=await navigator.mediaDevices.getUserMedia({audio:true});const ch=[];
+  recorder=new MediaRecorder(s);const mime=recorder.mimeType||'audio/webm';recorder.ondataavailable=e=>ch.push(e.data);
+  recorder.onstop=()=>{s.getTracks().forEach(t=>t.stop());recorder=null;$('rec').classList.remove('live');$('rec').textContent='🎤 Record from microphone';
+   setAudio(new Blob(ch,{type:mime}),'recording.webm')};
+  recorder.start();$('rec').classList.add('live');$('rec').textContent='⏹ Stop recording';
+ }catch{showErr('Microphone access was blocked or is unavailable.')}
+};
+
+function showErr(m){$('err').textContent=m;$('err').classList.remove('hide')}
+
+// analyze
+$('go').onclick=async()=>{
+ if(!blob)return;
+ $('err').classList.add('hide');$('empty').classList.add('hide');$('out').classList.add('hide');$('spin').classList.remove('hide');$('go').disabled=true;
+ const fd=new FormData();fd.append('file',blob,name);fd.append('language',lang);
+ try{
+  const r=await fetch(API+'/predict',{method:'POST',body:fd});
+  const j=await r.json();if(!r.ok)throw new Error(j.detail||'Prediction failed');
+  show(j);
+ }catch(e){$('empty').classList.remove('hide');showErr('Could not process this audio: '+e.message)}
+ finally{$('spin').classList.add('hide');$('go').disabled=false}
+};
+
+function show(j){
+ const k=j.emotion.toLowerCase(),ent=Object.entries(j.probs).sort((a,b)=>b[1]-a[1]);
+ $('emo').textContent=EMOJI[k]||'🎭';
+ $('ename').textContent=j.emotion[0].toUpperCase()+j.emotion.slice(1);
+ $('conf').textContent=(KN[k]?KN[k]+' · ':'')+(ent[0][1]*100).toFixed(1)+'% confidence';
+ $('bars').innerHTML=ent.map(([n,p],i)=>`<div class="row ${i?'':'top'}"><span>${EMOJI[n.toLowerCase()]||''} ${n}</span><div class="track"><div class="fill" data-w="${p*100}"></div></div><span>${(p*100).toFixed(1)}%</span></div>`).join('');
+ $('lat').textContent=j.latency+' s';$('lg').textContent=j.language;
+ $('out').classList.remove('hide');
+ requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%')));
+}
+renderInfo();
+</script>
+</body>
+</html>
